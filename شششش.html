@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>مواقيت الصلاة</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #116cc1;
+      color: rgb(0, 0, 0);
+      text-align: center;
+      padding: 30px;ٍ
+    }
+    .city {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .date {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+    .prayer-times {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    .card {
+      background-color: rgb(23, 197, 69);
+      color: black;
+      padding: 15px;
+      border-radius: 15px;
+      width: 100px;
+    }
+    .card h3 {
+      background-color: #38d1e8;
+      color: rgb(0, 0, 0);
+      border-radius: 8px;
+      padding: 5px 0;
+      margin-bottom: 10px;
+    }
+    .selector {
+      margin-top: 40px;
+    }
+    select {
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="city" id="city-name">الإسكندرية</div>
+  <div class="date" id="date">تحميل التاريخ...</div>
+
+  <div class="prayer-times" id="prayer-times">
+    <!-- سيتم تعبئتها تلقائيًا -->
+  </div>
+
+  <div class="selector">
+    <select id="city-select">
+      <option value="Alexandria,EG">الإسكندرية</option>
+      <option value="Cairo,EG">القاهرة</option>
+      <option value="Riyadh,SA">الرياض</option>
+      <option value="Makkah,SA">مكة</option>
+    </select>
+  </div>
+
+  <script>
+    const cityName = document.getElementById('city-name');
+    const dateElement = document.getElementById('date');
+    const prayerTimesContainer = document.getElementById('prayer-times');
+    const select = document.getElementById('city-select');
+
+    async function fetchPrayerTimes(city) {
+      try {
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=&method=5`);
+        const data = await response.json();
+        const timings = data.data.timings;
+        const readableDate = data.data.date.readable;
+
+        cityName.innerText = select.options[select.selectedIndex].text;
+        dateElement.innerText = readableDate;
+
+        const prayers = {
+          "الفجر": timings.Fajr,
+          "الشروق": timings.Sunrise,
+          "الظهر": timings.Dhuhr,
+          "العصر": timings.Asr,
+          "المغرب": timings.Maghrib,
+          "العشاء": timings.Isha
+        };
+
+        prayerTimesContainer.innerHTML = '';
+        for (const [name, time] of Object.entries(prayers)) {
+          prayerTimesContainer.innerHTML += `
+            <div class="card">
+              <h3>${name}</h3>
+              <div>${time}</div>
+            </div>
+          `;
+        }
+
+      } catch (error) {
+        console.error('خطأ في جلب البيانات:', error);
+        prayerTimesContainer.innerHTML = '<p>تعذر تحميل البيانات</p>';
+      }
+    }
+
+    select.addEventListener('change', () => {
+      const city = select.value;
+      fetchPrayerTimes(city);
+    });
+
+    // تحميل البيانات لأول مرة
+    fetchPrayerTimes(select.value);
+  </script>
+
+</body>
+</html>
